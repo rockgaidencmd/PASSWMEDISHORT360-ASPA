@@ -118,25 +118,7 @@
   </head>
   <body>
     <!-- ============ PUERTA DE ACTIVACION ============ -->
-    <div id="aspa-gate">
-      <div class="aspa-gate-card">
-        <img src="./icono-192.png" alt="MEDISHORT360" class="aspa-logo" />
-        <div class="aspa-gate-brand">MEDISHORT360 · ASPA</div>
-        <div class="aspa-gate-title">Activación</div>
-        <div class="aspa-gate-sub">Ingresa tu código único para desbloquear la calculadora.</div>
-
-        <div class="aspa-input-row">
-          <input id="aspa-codigo" type="text" inputmode="text"
-                 placeholder="CÓDIGO" autocomplete="off"
-                 autocapitalize="characters" spellcheck="false" maxlength="40" />
-        </div>
-
-        <button id="aspa-activar" class="aspa-btn">Activar</button>
-        <div id="aspa-msg" class="aspa-msg"></div>
-
-        <div class="aspa-gate-footer">Solo necesitas activar una vez en este dispositivo.</div>
-      </div>
-    </div>
+    <!-- FREE: activation overlay removed; core application unchanged -->
 
     <div id="particles"></div>
     <div id="root">
@@ -149,6 +131,6 @@
     <button id="install-btn" onclick="handleInstall()">🩺 Instalar app</button>
     <script src="./app.js"></script>
     <!-- Lógica de activación con Firebase (módulo, no toca app.js) -->
-    <script type="module" src="./activacion.js"></script>
+    
   </body>
 </html>
