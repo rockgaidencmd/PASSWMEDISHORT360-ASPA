@@ -1,68 +1,21 @@
-// Nombre de la cache — SUBIDO A v3 para forzar limpieza del caché viejo
-const CACHE_NAME = 'medishort360-aspa-v3';
-
-const urlsParaCache = [
-    './',
-    './index.html',
-    './style.css',
-    './app.js',
-    './activacion.js',
-    './manifest.json',
-    './icono-192.png',
-    './icono-512.png'
-];
-
-// Instalar: cachea los archivos nuevos
-self.addEventListener('install', (evento) => {
-    evento.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsParaCache))
-    );
-    self.skipWaiting();
+/* MEDISHORTS 360 FREE — Service Worker propio, sin activación */
+const CACHE_NAME = 'ms360-free-aspa-20261020-v1';
+const ASSETS = ["./","./index.html","./app.js","./style.css","./manifest.json","./install-free.js","icon-192.png","icon-512.png"];
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
-
-// Activar: borra TODOS los caches viejos (cualquiera que no sea v3)
-self.addEventListener('activate', (evento) => {
-    evento.waitUntil(
-        caches.keys().then((nombres) =>
-            Promise.all(
-                nombres.map((nombre) => {
-                    if (nombre !== CACHE_NAME) return caches.delete(nombre);
-                })
-            )
-        )
-    );
-    self.clients.claim();
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('ms360-free-aspa-') && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
-
-// Estrategia: NETWORK FIRST (red primero, caché como respaldo offline)
-// Así siempre se muestra la versión más reciente cuando hay internet,
-// y la app sigue funcionando sin conexión.
-self.addEventListener('fetch', (evento) => {
-    if (evento.request.method !== 'GET') return;
-
-    // No interceptar peticiones a Firebase / Google (deben ir siempre a la red)
-    const url = evento.request.url;
-    if (url.includes('firebase') || url.includes('googleapis') || url.includes('gstatic')) {
-        return; // deja que el navegador lo maneje normalmente
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin || !url.pathname.startsWith(new URL(self.registration.scope).pathname)) return;
+  event.respondWith(fetch(event.request).then(response => {
+    if (response.ok) {
+      const copy = response.clone();
+      event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)));
     }
-
-    evento.respondWith(
-        fetch(evento.request)
-            .then((respuesta) => {
-                // Guardar copia fresca en caché
-                if (respuesta && respuesta.status === 200 && respuesta.type === 'basic') {
-                    const clon = respuesta.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(evento.request, clon));
-                }
-                return respuesta;
-            })
-            .catch(() =>
-                // Sin internet → usar lo que haya en caché
-                caches.match(evento.request).then((c) => c || caches.match('./index.html'))
-            )
-    );
-});
-
-self.addEventListener('message', (evento) => {
-    if (evento.data && evento.data.type === 'SKIP_WAITING') self.skipWaiting();
+    return response;
+  }).catch(() => caches.match(event.request).then(cached => cached || new Response('Sin conexión', {status:503}))));
 });
