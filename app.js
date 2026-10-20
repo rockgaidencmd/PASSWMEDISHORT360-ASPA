@@ -19,7 +19,7 @@ const PRESETS = {
       {label:"Agua dest. 0%",value:0},
     ],
     deseada:3, volumenes:[100,250,500,1000],
-    acento:"#c8a614", sombra:"#c8a61444", icon:"💧",
+    acento:"#1976d2", sombra:"#1976d244", icon:"💧",
   },
   "Dextrosa":{
     concentrada:{label:"Dextrosa 50%",value:50},
@@ -34,11 +34,12 @@ const PRESETS = {
     diluida:{label:"Solucion diluida",value:0},
     opciones_conc:[], opciones_dil:[],
     deseada:10, volumenes:[100,250,500,1000],
-    acento:"#4ea6dc", sombra:"#4ea6dc44", icon:"⚗️",
+    acento:"#00cae0", sombra:"#00cae044", icon:"⚗️",
   },
 };
 
 let state = {
+  vista:"aprende",
   tipo:"Salina",
   cConc:20, cDil:0.9, cDeseada:3, vFinal:500,
   labelConc:"Soletrol Na 20%", labelDil:"Sol. Salina 0.9%",
@@ -219,7 +220,7 @@ function renderResult(){
         <div class="result-body">
           <div class="card-label">Volumenes para ${vFinal} mL</div>
           <div class="vol-result-grid">
-            ${[{label:state.labelConc,v:res.vConc,c:cConc,color:ac},{label:state.labelDil,v:res.vDil,c:cDil,color:"#4ea6dc"}].map(b=>`
+            ${[{label:state.labelConc,v:res.vConc,c:cConc,color:ac},{label:state.labelDil,v:res.vDil,c:cDil,color:"#42a5f5"}].map(b=>`
               <div class="vol-block" style="border-color:${b.color};box-shadow:0 0 12px ${b.color}22">
                 <div class="vol-block-label">${b.label} (${b.c}%)</div>
                 <div class="vol-block-val" style="color:${b.color};text-shadow:0 0 8px ${b.color}66">
@@ -297,19 +298,7 @@ window.selDil = function(op){
   renderForm(); renderResult();
 };
 
-/* ── PWA install ─────────────────────────────────── */
-window.addEventListener("beforeinstallprompt",(e)=>{
-  e.preventDefault(); state.installPrompt=e;
-  el("install-btn").classList.add("visible");
-});
-window.addEventListener("appinstalled",()=>{
-  el("install-btn").classList.remove("visible"); state.installPrompt=null;
-});
-window.handleInstall=function(){
-  if(!state.installPrompt) return;
-  state.installPrompt.prompt(); state.installPrompt=null;
-  el("install-btn").classList.remove("visible");
-};
+/* ── PWA install (gestionado por la app maestra) ── */
 
 function makeParticles(){
   const c=el("particles"); c.innerHTML="";
@@ -322,8 +311,102 @@ function makeParticles(){
   }
 }
 
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+/* SW gestionado por la app maestra MS360 — registro local desactivado */
+
+/* ===== Navegación Aprende / Calcula ===== */
+function renderNav(){
+  const a = state.vista === "aprende";
+  el("z-nav").innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button onclick="setVista('aprende')"
+        style="flex:1;padding:13px 8px;border-radius:14px;border:2px solid ${a?'#42a5f5':'#1e2d5088'};
+               background:${a?'#1976d233':'transparent'};color:${a?'#fff':'#7a8aac'};
+               font-size:14px;font-weight:${a?'700':'400'};cursor:pointer;transition:all .2s">
+        📘 Aprende
+      </button>
+      <button onclick="setVista('calcula')"
+        style="flex:1;padding:13px 8px;border-radius:14px;border:2px solid ${!a?'#42a5f5':'#1e2d5088'};
+               background:${!a?'#1976d233':'transparent'};color:${!a?'#fff':'#7a8aac'};
+               font-size:14px;font-weight:${!a?'700':'400'};cursor:pointer;transition:all .2s">
+        ⚗️ Calcula
+      </button>
+    </div>`;
+}
+
+function setVista(v){
+  state = {...state, vista:v};
+  renderNav();
+  if(v === "aprende"){
+    el("z-aprende").style.display = "block";
+    el("z-form").style.display = "none";
+    el("z-result").style.display = "none";
+  } else {
+    el("z-aprende").style.display = "none";
+    el("z-form").style.display = "block";
+    el("z-result").style.display = "block";
+  }
+}
+
+function renderAprende(){
+  const bl="#1976d2", blt="#42a5f5", cy="#00cae0";
+  el("z-aprende").innerHTML = `
+    <div class="card" style="border-color:${bl}55">
+      <div class="card-label">📘 Mini-clase — Regla del Aspa (Aligación)</div>
+      <p style="color:#90caf9;font-size:13px;line-height:1.5;margin:6px 0 0">
+        Aprende a preparar una solución con la concentración que necesitas, mezclando una solución concentrada con un diluyente. Lee el ejemplo y luego practica en la pestaña Calcula.
+      </p>
+    </div>
+
+    <div class="card" style="border-color:${bl}44">
+      <div class="card-label">1️⃣ ¿QUÉ ES LA REGLA DEL ASPA?</div>
+      <p style="color:#cfe0f5;font-size:13.5px;line-height:1.6;margin:6px 0">
+        Es un método visual (también llamado <strong>aligación</strong>) para saber en qué proporción mezclar dos soluciones de distinta concentración y obtener una concentración intermedia deseada.
+      </p>
+      <p style="color:#cfe0f5;font-size:13.5px;line-height:1.6;margin:6px 0">
+        Se cruzan los valores en forma de <strong>X (aspa)</strong>: la concentración deseada se resta de cada extremo, y las diferencias indican las partes de cada solución.
+      </p>
+    </div>
+
+    <div class="card" style="border-color:${bl}44">
+      <div class="card-label">2️⃣ CÓMO SE CALCULA</div>
+      <div style="background:${bl}1a;border-radius:10px;padding:12px;font-family:monospace;color:${blt};font-size:12.5px;line-height:1.8;margin:8px 0">
+        Partes de concentrada = |deseada − diluyente|<br/>
+        Partes de diluyente = |concentrada − deseada|<br/>
+        Volumen concentrada = (partes conc ÷ partes totales) × volumen final<br/>
+        Volumen diluyente = (partes dil ÷ partes totales) × volumen final
+      </div>
+    </div>
+
+    <div class="card" style="border-color:${cy}44">
+      <div class="card-label">💡 EJEMPLO RESUELTO</div>
+      <p style="color:#cfe0f5;font-size:13.5px;line-height:1.7;margin:6px 0">
+        Quieres preparar <strong>500 mL</strong> de una solución al <strong>3%</strong>, mezclando una solución concentrada al <strong>20%</strong> con diluyente al <strong>0.9%</strong>.
+      </p>
+      <div style="color:#cfe0f5;font-size:13px;line-height:1.8;margin:8px 0">
+        <strong>Paso 1.</strong> Partes de concentrada = |3 − 0.9| = <strong>2.1</strong><br/>
+        <strong>Paso 2.</strong> Partes de diluyente = |20 − 3| = <strong>17</strong><br/>
+        <strong>Paso 3.</strong> Partes totales = 2.1 + 17 = <strong>19.1</strong><br/>
+        <strong>Paso 4.</strong> Volumen concentrada:<br/>
+        <span style="font-family:monospace;color:${blt}">(2.1 ÷ 19.1) × 500 ≈ <strong>55 mL</strong></span><br/>
+        <strong>Paso 5.</strong> Volumen diluyente:<br/>
+        <span style="font-family:monospace;color:${blt}">(17 ÷ 19.1) × 500 ≈ <strong>445 mL</strong></span>
+      </div>
+      <div style="background:${cy}1a;border-left:3px solid ${cy};border-radius:0 8px 8px 0;padding:10px 12px;color:#fff;font-size:13px;margin-top:8px">
+        ✅ Mezcla <strong>55 mL</strong> de solución al 20% con <strong>445 mL</strong> de diluyente al 0.9% para obtener 500 mL al 3%.
+      </div>
+    </div>
+
+    <div class="card" style="background:#f59e0b14;border-color:#f59e0b55">
+      <p style="color:#ffd591;font-size:12.5px;line-height:1.6;margin:0">
+        ⚠️ <strong>Herramienta educativa.</strong> Estos cálculos son para aprendizaje y práctica. Verifica siempre la prescripción, los protocolos de tu institución y las presentaciones reales antes de cualquier preparación. Consulta a un profesional de la salud para decisiones clínicas.
+      </p>
+    </div>
+
+    <button onclick="setVista('calcula')"
+      style="width:100%;padding:14px;border:none;border-radius:12px;background:${bl};color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px">
+      ⚗️ Ahora practica con la calculadora →
+    </button>
+  `;
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
@@ -346,6 +429,9 @@ document.addEventListener("DOMContentLoaded",()=>{
       <div class="app-brand">📺 Canal MEDISHORT360-ASPA</div>
     </div>`;
 
+  renderNav();
+  renderAprende();
   renderForm();
   renderResult();
+  setVista("aprende");
 });
