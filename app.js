@@ -163,6 +163,7 @@ function renderResult(){
   const {cConc,cDil,cDeseada,vFinal} = state;
   const valido = cConc>cDil && cDeseada>cDil && cDeseada<cConc;
   const res = valido ? calcular({cConc,cDil,cDeseada,vFinal}) : null;
+  if(res && window.ms360Shown !== JSON.stringify({tab:'aspa',state})) { el('z-result').innerHTML = `<button style="padding:14px;border-radius:12px;background:#1976d2;color:white;border:0;font-weight:bold" onclick="ms360Reveal('aspa')">📊 Ver resultado (3 pruebas gratuitas)</button>`;return; }
 
   const amp = state.selConc?.ampolla||null;
   const numAmpollas  = amp&&res ? res.vConc/amp.volMl : null;
@@ -435,3 +436,5 @@ document.addEventListener("DOMContentLoaded",()=>{
   renderResult();
   setVista("aprende");
 });
+
+window.ms360Reveal=function(tab){if(window.MS360Premium&&!window.MS360Premium.allow())return;window.ms360Shown=JSON.stringify({tab,state});renderResult();};
